@@ -51,18 +51,90 @@ var mitPressureSurvey = [
 {dorm: 'Westgate', happierThanAvg: 43, extroverted: 30, workLifeBalance: 43}
 ]
 
-var width = 420
+var width = 420;
+var height = 420;
 var barHeight = 20;
 
 // utility function that maps [0 to 100] to [0, width]
 // draw this on the board as a map of two lines
-var scaleFunction = d3.scale.linear().domain([0, 100]).range([0, width]);
-
+var scaleFunctionW = d3.scale.linear().domain([0, 100]).range([0, width]);
+var scaleFunctionH = d3.scale.linear().domain([0,100]).range([0,height]);
+var xscale = d3.scale.linear().range([0,width]).domain([0,100])
+var yscale = d3.scale.linear().range([0,height]).domain([100,0])
 
 // jQuery magic to run this code after your page loads
 $(function() {
-  // insert your code here
+    var chart = d3.select('#d3chart')
+                  .attr("width", width)
+                  .attr("height", barHeight*mitPressureSurvey.length);
+    var binding = chart.selectAll('g').data(mitPressureSurvey); //g is a group in svg.
+    var bar = binding.enter()
+                     .append('g')
+                     .attr("transform", function(d,i){return 'translate(0,' + (i*barHeight)+')'
+                    });
+    bar.append('rect')
+       .attr('width', function(d) {return scaleFunctionW(d.happierThanAvg)})
+       .attr('height', barHeight - 4);
+    bar.append('text')
+       .attr('x', 3)
+       .attr('y', barHeight / 2 + 3)
+       .text(function (d) {return d.dorm});
+    
+
 });
+function clear_scatterplot(){
+//      location.reload();            //reloads the page. bad temperory solution to remove the d3 objects.
+    $('circle').remove();
+    $('.yaxis *').remove();
+    $('.xaxis *').remove();
+}
+function make_scatterplot(){
+    clear_scatterplot();
+    var xaxis = $('input[name=xaxis]:checked').val()    //these are the value of radiobuttons, which are the same as the dictionary keys.
+    var yaxis = $('input[name=yaxis]:checked').val()
+    var plot = d3.select('#d3plot')
+                 .attr('width', width)
+                 .attr('height', height)
+                 .attr('transform', 'translate(0,600)')
+    var xaxis_visual = d3.svg.axis()    //this is the d3 axis object
+                      .scale(xscale)
+                      .tickSize(-420)
+                      .tickSubdivide(true)
+                      .tickPadding(10)
+    var plot_bind = plot.selectAll('circle').data(mitPressureSurvey);//circles are data points, scatter plot
+    var yaxis_visual = d3.svg.axis()    //this is the d3 axis object
+                      .scale(yscale)
+                      .orient('right')
+    plot_bind.enter()
+             .append('circle')
+             .attr('class', 'plot')     
+             .attr('cx', function(d) {return scaleFunctionW(d[xaxis])})
+             .attr('cy', function(d) {return height - scaleFunctionH(d[yaxis])})
+             .attr('r', 5)
+             .append('svg:title')   //easy way to do tooltips without on:mouseover handlers!
+             .text(function(d) {return d.dorm});
+
+    var d3xaxis = d3.select('#xaxis')   //this is svr object
+                    .attr('width', width+20)
+                    .attr('height', 100)
+                    .attr('transform', 'translate(0,1020)')
+    d3xaxis.call(xaxis_visual);
+    d3xaxis.append('g')         //x axis title
+           .attr('transform', 'translate('+width*0.3+',40)')
+           .append('text')
+           .attr('class', 'plot')
+           .text(xaxis)
+    var d3yaxis = d3.select('#yaxis')       //this is svr object
+                    .attr('width', 200)
+                    .attr('height', height+20)
+
+    d3yaxis.call(yaxis_visual);
+    d3yaxis.append('g')
+           .attr('transform', 'translate(50,'+height*0.5+')')
+           .append('text')
+           .attr('class', 'plot')
+           .text(yaxis)  
+}
 
 </script>
 </head>
@@ -70,8 +142,20 @@ $(function() {
 <body>
 
 <h1>MIT pressure survey visualization</h1>
+<svg class="chart" id="d3chart"></svg> <br>
+<span>X axis:</span>
+<input type="radio" name='xaxis' id = 'x_happiness' checked = true value = 'happierThanAvg'>Happier than Average</input>
+<input type="radio" name='xaxis' id = 'x_extrovert' value = 'extroverted'>Extroverted people</input>
+<input type="radio" name='xaxis' id = 'x_balance' value = 'workLifeBalance'>work-life Balance</input> <br>
+<span>Y axis:</span>
+<input type="radio" name='yaxis' id = 'y_happiness' value = 'happierThanAvg'>Happier than Average</input>
+<input type="radio" name='yaxis' id = 'y_extrovert' value = 'extroverted'>Extroverted people</input>
+<input type="radio" name='yaxis' id = 'y_balance' checked = true value = 'workLifeBalance'>work-life Balance</input> <br>
+<button id ='graph' onclick="make_scatterplot()" >Graph</button><br> 
+<svg class = 'plot' id = 'd3plot'></svg>
+<svg class = 'yaxis' id = 'yaxis'></svg><br>
+<svg class = 'xaxis' id = 'xaxis'></svg> <br>    <!--had to do this to make the axis behave-->
 
-<svg class="chart" id="d3chart"></svg>
 
 </body>
 </html>

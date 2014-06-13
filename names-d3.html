@@ -25,6 +25,24 @@ var students = [
 
 // jQuery magic to run this code after your page loads
 $(function() {
+    var root = d3.select('#studentRoster');
+    var binding = root.selectAll("div").data(students);
+    binding.enter()
+            .append('div')
+            .text(function(d){
+                var parts = d.split(',');
+                return (parts[1] +' '+ parts[0]);
+            })
+            .style('font-size', function(d) {
+                return (d.length*2) + 'px' 
+            })
+    
+    
+/*    for (var i = 0; i<students.length; i++){
+        var s = students[i];
+        var len = s.length;
+        $('#studentRoster').append("<div style='font-size: " + len*2 + "px;'>"+ s+ " </div>")
+    }*/
   // insert your code here
 });
 
